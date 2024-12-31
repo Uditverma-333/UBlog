@@ -18,9 +18,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const tempDir = path.join(__dirname, '../tmp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req, res, cb) => {
-    cb(null, "/tmp/");
+    cb(null, path.join(__dirname, '../tmp/')); // Using a guaranteed path
   },
   filename: (req, file, cb) => {
     console.log(file);
@@ -33,41 +38,62 @@ const upload = multer({
   limits: { fileSize: 2048 * 2048 },
 });
 
-// REGISTER
 UserRouter.post("/register", upload.single("avatar_url"), async (req, res) => {
-  const { name, avatar_url, email, password } = req.body;
+  const { name, email, password } = req.body;
+
   try {
-    const filePath = req.file.path;
-    if (!filePath) {
-      return;
+    // Check if email is already registered
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).send({ message: "Email already exists" });
     }
+
+    // Validate file
+    if (!req.file || !req.file.path) {
+      return res.status(400).send({ message: "File upload failed" });
+    }
+    const filePath = req.file.path;
+
+    // Upload file to Cloudinary
     cloudinary.v2.uploader.upload(filePath, async (error, result) => {
-      if (result.secure_url) {
-        bcrypt.hash(password, 3, async (err, hash) => {
-          const user_to_add = new UserModel({
-            name,
-            avatar_url: result.secure_url,
-            email,
-            password: hash,
-          });
-          await user_to_add.save((err) => {
-            // CHECKING IS EMAIL UNIQUE
-            if (err) {
-              res.status(400).send({ message: "Email already exists" });
-            } else {
-              res.send({ message: "Account created" });
-            }
-          });
-        });
-      } else {
-        res.send(error.message);
+      // Handle upload error
+      if (error) {
+        return res.status(500).send({ message: "Image upload failed", error });
       }
+
+      // Delete temp file after upload
+      fs.unlink(filePath, (err) => {
+        if (err) console.log("Failed to delete temp file", err);
+      });
+
+      // Hash password and save user
+      bcrypt.hash(password, 3, async (err, hash) => {
+        if (err) {
+          return res.status(500).send({ message: "Password hashing failed", error: err });
+        }
+
+        const user_to_add = new UserModel({
+          name,
+          avatar_url: result.secure_url,
+          email,
+          password: hash,
+        });
+
+        try {
+          await user_to_add.save();
+          res.status(201).send({ message: "Account created" });
+        } catch (saveError) {
+          res.status(400).send({ message: "Email already exists" });
+        }
+      });
     });
   } catch (error) {
     console.log(error);
-    res.status(400).send({ message: "Something went wrong", error });
+    res.status(500).send({ message: "Something went wrong", error });
   }
 });
+
+
 
 // LOGIN
 UserRouter.post("/login", async (req, res) => {

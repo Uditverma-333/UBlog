@@ -30,7 +30,7 @@ function RegisterForm() {
   const [show, setShow] = useState(false);
   const [name, setName] = useState("");
   const [formData, setFormData] = useState(null);
-  const [avatar_url, setAvatar_url] = useState("");
+  const [avatar_url, setAvatar_url] = useState(null); // Ensure avatar_url is set to null by default
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const colorScheme = useColorModeValue("blue", "green");
@@ -44,37 +44,39 @@ function RegisterForm() {
 
   const handleCompressedUpload = (e) => {
     const image = e.target.files[0];
-    new Compressor(image, {
-      quality: 0.6,
-      success: (res) => {
-        if (res.size > 2048000) {
-          toast({
-            title: "Image size should be less than 2 MB ",
-            status: "error",
-            duration: 2000,
-            isClosable: true,
-          });
-          return;
-        }
-        setAvatar_url(res);
-      },
-    });
+    if (image) {
+      new Compressor(image, {
+        quality: 0.6,
+        success: (res) => {
+          if (res.size > 2048000) {
+            toast({
+              title: "Image size should be less than 2 MB",
+              status: "error",
+              duration: 2000,
+              isClosable: true,
+            });
+            return;
+          }
+          setAvatar_url(res);
+        },
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const regEx = /[a-zA-Z0-9._%+-]+@[a-z0-9·-]+\.[a-z]{2,8}(.[a-z{2,8}])?/g;
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("avatar_url", avatar_url);
-    formData.append("email", email);
-    formData.append("password", password);
+    if (avatar_url && regEx.test(email)) {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("avatar_url", avatar_url);
+      formData.append("email", email);
+      formData.append("password", password);
 
-    if (regEx.test(email)) {
       dispatch(register(formData));
     } else {
       toast({
-        title: "Invalid Email Address",
+        title: avatar_url ? "Invalid Email Address" : "Please upload an image",
         status: "error",
         duration: 2000,
         isClosable: true,
@@ -86,10 +88,8 @@ function RegisterForm() {
     <Card py="3">
       <CardBody>
         <form
-          action="/users/register"
-          method="POST"
-          encType="multipart/form-data"
           onSubmit={handleSubmit}
+          encType="multipart/form-data"
         >
           <VStack maxW={"2xl"} spacing={5}>
             <InputGroup position="relative">
@@ -102,7 +102,6 @@ function RegisterForm() {
               <Input
                 placeholder="Name*"
                 type="name"
-                name="name"
                 size="lg"
                 onChange={(e) => setName(e.target.value)}
               />
@@ -118,7 +117,6 @@ function RegisterForm() {
               <Input
                 placeholder="Paste URL*"
                 type="file"
-                name="avatar_url"
                 size="lg"
                 accept="image/*"
                 sx={{
@@ -143,7 +141,6 @@ function RegisterForm() {
               <Input
                 placeholder="Email*"
                 type="email"
-                name="email"
                 size="lg"
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -159,7 +156,6 @@ function RegisterForm() {
               <Input
                 type={show ? "text" : "password"}
                 placeholder="Password*"
-                name="password"
                 size="lg"
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -180,9 +176,7 @@ function RegisterForm() {
             </InputGroup>
             <Button
               isDisabled={
-                email == "" || avatar_url == "" || name == "" || password == ""
-                  ? true
-                  : false
+                !email || !avatar_url || !name || !password
               }
               width="100%"
               onClick={handleSubmit}

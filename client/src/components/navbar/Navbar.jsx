@@ -28,14 +28,14 @@ const Navbar = () => {
         backgroundColor: colorMode == "light" ? "#FFFFFF" : "#1A202C",
       }}
     >
-      <Container maxW="6xl" py={3}>
+      <Container maxW="6xl" py={4}>
         <Flex justifyContent="space-between" alignItems="center">
-          <RouterLink to="/" fontSize="2xl" fontWeight="500">
-            <Text fontSize="2xl" fontWeight="500">
-              iBlog
+          <RouterLink to="/" fontSize="2xl" fontWeight="500" >
+            <Text fontSize="2xl" fontWeight="500" >
+              Ublog
             </Text>
           </RouterLink>
-          <HStack spacing={4}>
+          <HStack spacing={6}>
             <RouterLink to="/create">
               <Flex
                 alignItems="center"
@@ -45,17 +45,7 @@ const Navbar = () => {
                 <Text ml={2}>Write</Text>
               </Flex>
             </RouterLink>
-            {user === null ? (
-              <RouterLink to="/account">
-                <Text _hover={{ textDecoration: "underline" }}>Sign In</Text>
-              </RouterLink>
-            ) : (
-              <SideMenu
-                src={user.avatar_url}
-                name={user.name}
-                email={user.email}
-              />
-            )}
+            
             <Button
               onClick={toggleColorMode}
               fontSize="md"
@@ -64,6 +54,17 @@ const Navbar = () => {
             >
               {colorMode === "light" ? <BsMoon /> : <BsSun />}
             </Button>
+            {user === null ? (
+              <RouterLink to="/account" >
+                <Text _hover={{ textDecoration: "underline" }} >Sign In</Text>
+              </RouterLink>
+            ) : (
+              <SideMenu
+                src={user.avatar_url}
+                name={user.name}
+                email={user.email}
+              />
+            )}
           </HStack>
         </Flex>
       </Container>

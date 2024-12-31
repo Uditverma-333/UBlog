@@ -61,11 +61,11 @@ const CreateForm = () => {
 
   const handleCreatePost = () => {
     if (
-      title.length == 0 ||
-      summary.length == 0 ||
-      content.length == 0 ||
-      cover.length == 0 ||
-      category.length == 0
+      title.length === 0 ||
+      summary.length === 0 ||
+      content.length === 0 ||
+      !cover ||
+      category.length === 0
     ) {
       toast({
         description: "Please fill all details",
@@ -94,7 +94,7 @@ const CreateForm = () => {
         position="sticky"
       >
         <Heading fontSize={{ base: "2xl", md: "4xl" }}>
-          Publish a Article
+          Publish an Article
         </Heading>
         <Button
           colorScheme={colorScheme}
@@ -106,13 +106,7 @@ const CreateForm = () => {
         </Button>
       </Flex>
 
-      <Divider borderColor={"gray.400"} />
 
-      {cover.length > 0 && (
-        <>
-          <Image w="100%" src={cover} />
-        </>
-      )}
 
       <Input
         type="text"
@@ -139,21 +133,59 @@ const CreateForm = () => {
         }}
         name="summary"
       />
+      <Divider borderColor={"gray.400"} />
 
-      <Input
-        placeholder="㊉ Add a Image"
-        variant="unstyled"
-        fontSize={{ base: "xl", md: "2xl" }}
-        size="xl"
-        value={cover}
-        onChange={(e) => {
-          setCover(e.target.value);
-        }}
-        name="cover"
-      />
+      {cover && (
+        <Image
+          w="auto"
+          maxW="250px" // Adjust width to a smaller size
+          h="auto"
+          src={cover}
+          objectFit="cover"
+          borderRadius="md"
+          mb={4}
+          boxShadow="md"
+          alignSelf="flex-start" // Shift image to the left
+        />
+      )}
+
+      <Flex alignItems="center" w="100%" justifyContent="space-between">
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            if (e.target.files[0]) {
+              setCover(URL.createObjectURL(e.target.files[0]));
+            }
+          }}
+          display="none"
+          id="file-upload"
+        />
+        <Box
+          cursor="pointer"
+          border="1px"
+          borderColor={borderColor}
+          borderRadius="md"
+          w="auto"
+          p={2}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          maxW="200px" // Smaller button width
+        >
+          <label htmlFor="file-upload">
+            <Box
+              as="span"
+              fontSize={{ base: "md", md: "lg" }}
+              color={colorScheme}
+            >
+              {cover ? "Change Image" : "Add Image"}
+            </Box>
+          </label>
+        </Box>
+      </Flex>
 
       <Select
-        // variant="unstyled"
         fontSize={{ base: "lg", md: "xl" }}
         placeholder="Select category"
         value={category}

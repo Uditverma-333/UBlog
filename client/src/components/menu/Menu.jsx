@@ -78,34 +78,14 @@ function SideMenu({ src, name, email }) {
                 <Text>Lists</Text>
               </Flex>
             </RouterLink>
-            <Tooltip hasArrow label="Work in Progress" placement="right">
-              <Flex alignItems="center" mb="20px" gap="10px" cursor="pointer">
-                <RiFileList2Line size="1.5em" />
-                <Text>Stories</Text>
-              </Flex>
-            </Tooltip>
-            <Tooltip hasArrow label="Work in Progress" placement="right">
-              <Flex alignItems="center" mb="20px" gap="10px" cursor="pointer">
-                <IoMdStats size="1.5em" />
-                <Text>Stats</Text>
-              </Flex>
-            </Tooltip>
+            
             <hr />
             <Tooltip hasArrow label="Work in Progress" placement="right">
               <Text mt="15px" mb="20px" cursor="pointer">
                 Settings
               </Text>
             </Tooltip>
-            <Tooltip hasArrow label="Work in Progress" placement="right">
-              <Text mb="20px" cursor="pointer">
-                Refine recommendations
-              </Text>
-            </Tooltip>
-            <Tooltip hasArrow label="Work in Progress" placement="right">
-              <Text mb="20px" cursor="pointer">
-                Manage Publications
-              </Text>
-            </Tooltip>
+            
             <hr />
             <Tooltip hasArrow label="Work in Progress" placement="right">
               <Flex alignItems="center" gap="70px">
@@ -115,16 +95,7 @@ function SideMenu({ src, name, email }) {
                 <RiStarSFill size="1.3em" color="#FFD700" />
               </Flex>
             </Tooltip>
-            <Tooltip hasArrow label="Work in Progress" placement="right">
-              <Text mb="20px" cursor="pointer">
-                Apply to the Partner Program
-              </Text>
-            </Tooltip>
-            <Tooltip hasArrow label="Work in Progress" placement="right">
-              <Text mb="20px" cursor="pointer">
-                Gift a membership
-              </Text>
-            </Tooltip>
+            
             <hr />
             <HStack mt={3} spacing={2}>
               <Text
