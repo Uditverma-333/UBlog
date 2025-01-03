@@ -2,6 +2,7 @@ import axios from "axios";
 
 // PUBLISH POST
 const publish = async ({ post, token }) => {
+  console.log("Token being sent:", token);
   const response = await axios.post(
     `${import.meta.env.VITE_API_URL}/posts/create`,
     post,
