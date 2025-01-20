@@ -24,6 +24,7 @@ const CreateForm = () => {
   const [cover, setCover] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
+  const [isUploading, setIsUploading] = useState(false); // To track image upload
   const colorScheme = useColorModeValue("blue", "green");
   const borderColor = useColorModeValue("gray.300", "gray.300");
 
@@ -58,6 +59,42 @@ const CreateForm = () => {
       dispatch(reset());
     }
   }, [isPosted, isErrorInPosting]);
+
+  // Function to handle image upload to Cloudinary
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "blog_image_upload"); // Replace with your Cloudinary preset
+    formData.append("cloud_name", "dlxuekk2j"); // Replace with your Cloudinary cloud name
+
+    try {
+      setIsUploading(true);
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dlxuekk2j/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      setCover(data.secure_url); // Set the Cloudinary image URL
+      setIsUploading(false);
+      toast({
+        description: "Image uploaded successfully!",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (err) {
+      setIsUploading(false);
+      toast({
+        description: "Failed to upload image. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleCreatePost = () => {
     if (
@@ -99,14 +136,12 @@ const CreateForm = () => {
         <Button
           colorScheme={colorScheme}
           onClick={handleCreatePost}
-          isLoading={isPosting}
-          loadingText="Publishing"
+          isLoading={isPosting || isUploading}
+          loadingText={isUploading ? "Uploading Image" : "Publishing"}
         >
           Publish
         </Button>
       </Flex>
-
-
 
       <Input
         type="text"
@@ -138,24 +173,25 @@ const CreateForm = () => {
       {cover && (
         <Image
           w="auto"
-          maxW="250px" // Adjust width to a smaller size
+          maxW="250px"
           h="auto"
           src={cover}
           objectFit="cover"
           borderRadius="md"
           mb={4}
           boxShadow="md"
-          alignSelf="flex-start" // Shift image to the left
+          alignSelf="flex-start"
         />
       )}
 
       <Flex alignItems="center" w="100%" justifyContent="space-between">
         <Input
           type="file"
+          name="cover"
           accept="image/*"
           onChange={(e) => {
             if (e.target.files[0]) {
-              setCover(URL.createObjectURL(e.target.files[0]));
+              uploadToCloudinary(e.target.files[0]); // Upload image to Cloudinary
             }
           }}
           display="none"
@@ -171,7 +207,7 @@ const CreateForm = () => {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          maxW="200px" // Smaller button width
+          maxW="200px"
         >
           <label htmlFor="file-upload">
             <Box

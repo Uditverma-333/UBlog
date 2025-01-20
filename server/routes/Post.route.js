@@ -4,8 +4,29 @@ const { authenticateToken } = require("../middleware/authenticateToken");
 const { PostModel } = require("../models/Post.model");
 const { UserModel } = require("../models/User.model");
 const { CommentModel } = require("../models/Comment.model");
+const { v2: cloudinary } = require("cloudinary");
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const PostRouter = express.Router();
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Multer configuration
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "blog_images",
+    allowed_formats: ["jpg", "jpeg", "png", "gif"],
+  },
+});
+
+const upload = multer({ storage });
 
 // @route    GET posts/
 // @desc     Get all posts
@@ -41,35 +62,51 @@ PostRouter.get("/:id", async (req, res) => {
 // @route    POST posts/create/
 // @desc     Create a post
 // @access   Private
-PostRouter.post("/create", authenticateToken, async (req, res) => {
-  try {
-    const post_to_add = new PostModel(req.body);
-    await post_to_add.save();
-    res.send({ message: "Post created Successfully" });
-  } catch (error) {
-    console.log(err);
-    res.send({ message: "Something went wrong", error: err });
-  }
-});
+PostRouter.post(
+  "/create",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      console.log(req.body);
+      const newPost = new PostModel({
+        ...req.body,
+      });
 
-// @route    PATCH posts/update/:id
-// @desc     Update a post
-// @access   Private
-PostRouter.patch("/update/:id", authenticateToken, async (req, res) => {
-  const ID = req.params.id;
-  try {
-    const post = await PostModel.find({ _id: ID, author: req.body.author });
-    if (post.length > 0) {
-      await PostModel.findByIdAndUpdate({ _id: ID }, req.body);
-      res.send({ message: "Post updated successfully" });
-    } else {
-      res.status(405).send({ message: "Method Not Allowed by this User" });
+      await newPost.save();
+      res.send({ message: "Post created successfully", post: newPost });
+    } catch (error) {
+      console.log(error);
+      res.status(400).send({ message: "Something went wrong", error });
     }
-  } catch (err) {
-    console.log(err);
-    res.send({ message: "Something went wrong", error: err });
   }
-});
+);
+
+// Update a post with image upload
+PostRouter.patch(
+  "/update/:id",
+  authenticateToken,
+  async (req, res) => {
+    const ID = req.params.id;
+    try {
+      const existingPost = await PostModel.findById(ID);
+
+      if (existingPost.author.toString() !== req.body.author) {
+        return res.status(403).send({ message: "Unauthorized access" });
+      }
+
+      const updatedPost = await PostModel.findByIdAndUpdate(
+        ID,
+        { ...req.body},
+        { new: true }
+      );
+
+      res.send({ message: "Post updated successfully", post: updatedPost });
+    } catch (error) {
+      console.log(error);
+      res.status(400).send({ message: "Something went wrong", error });
+    }
+  }
+);
 
 // @route    DELETE posts/delete/:id
 // @desc     Delete a post

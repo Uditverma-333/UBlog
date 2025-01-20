@@ -39,6 +39,43 @@ const EditForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // To track image upload
+
+  // Cloudinary image upload function
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "blog_image_upload"); // Replace with your Cloudinary preset
+    formData.append("cloud_name", "dlxuekk2j"); // Replace with your Cloudinary cloud name
+
+    try {
+      setIsUploading(true);
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dlxuekk2j/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      setPostData({ ...postData, cover: data.secure_url }); // Set the Cloudinary image URL
+      setIsUploading(false);
+      toast({
+        description: "Image uploaded successfully!",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (err) {
+      setIsUploading(false);
+      toast({
+        description: "Failed to upload image. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleUpdatePost = () => {
     let editedPost = {
@@ -133,6 +170,44 @@ const EditForm = () => {
         </>
       )}
 
+      {/* Image Upload */}
+      <Flex alignItems="center" w="100%" justifyContent="space-between">
+        <Input
+          type="file"
+          name="cover"
+          accept="image/*"
+          onChange={(e) => {
+            if (e.target.files[0]) {
+              uploadToCloudinary(e.target.files[0]); // Upload image to Cloudinary
+            }
+          }}
+          display="none"
+          id="file-upload"
+        />
+        <Box
+          cursor="pointer"
+          border="1px"
+          borderColor="gray.300"
+          borderRadius="md"
+          w="auto"
+          p={2}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          maxW="200px"
+        >
+          <label htmlFor="file-upload">
+            <Box
+              as="span"
+              fontSize={{ base: "md", md: "lg" }}
+              color={colorScheme}
+            >
+              {postData.cover ? "Change Image" : "Add Image"}
+            </Box>
+          </label>
+        </Box>
+      </Flex>
+
       <Input
         type="text"
         placeholder="Topic"
@@ -152,16 +227,6 @@ const EditForm = () => {
         size="xl"
         name="summary"
         value={postData.summary}
-        onChange={handleChange}
-      />
-
-      <Input
-        placeholder="㊉ Add a Image"
-        variant="unstyled"
-        fontSize={{ base: "xl", md: "2xl" }}
-        size="xl"
-        name="cover"
-        value={postData.cover}
         onChange={handleChange}
       />
 
